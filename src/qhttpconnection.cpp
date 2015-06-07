@@ -61,7 +61,7 @@ QHttpConnection::QHttpConnection(QTcpSocket *socket, QObject *parent)
 
 QHttpConnection::~QHttpConnection()
 {
-    delete m_socket;
+    //delete m_socket;
     m_socket = 0;
 
     free(m_parser);
@@ -73,8 +73,6 @@ QHttpConnection::~QHttpConnection()
 
 void QHttpConnection::socketDisconnected()
 {
-    deleteLater();
-
     if (m_request) {
         if (m_request->successful())
             return;
@@ -82,7 +80,46 @@ void QHttpConnection::socketDisconnected()
         m_request->setSuccessful(false);
         Q_EMIT m_request->end();
     }
+
+    m_socket->deleteLater();
+    deleteLater();
+
 }
+
+/*
+QHttpConnection::~QHttpConnection()
+{
+    m_socket = 0;
+
+    if ( m_parser != 0 ) {
+        free(m_parser);
+        m_parser = 0;
+    }
+
+    if ( m_parserSettings != 0 ) {
+        delete m_parserSettings;
+        m_parserSettings = 0;
+    }
+}
+
+void QHttpConnection::socketDisconnected()
+{
+    if (m_request) {
+        if ( !m_request->successful() ) {
+            // is the very next line redundant?
+            m_request->setSuccessful(false);
+            emit m_request->end();
+        }
+    }
+
+    m_socket->deleteLater(); // safely delete m_socket
+    deleteLater();
+}
+
+*/
+
+
+
 
 void QHttpConnection::updateWriteCount(qint64 count)
 {
