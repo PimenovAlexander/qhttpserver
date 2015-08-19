@@ -74,6 +74,28 @@ void QHttpResponse::writeHeaders()
     if (m_finished)
         return;
 
+    if (m_headers.contains("Upgrade"))
+    {
+        writeHeader("Upgrade", m_headers["Upgrade"]);
+        m_headers.remove("Upgrade");
+
+        if (m_headers.contains("Connection"))
+        {
+            writeHeader("Connection", m_headers["Connection"]);
+        }
+        m_headers.remove("Connection");
+        m_sentConnectionHeader = true;
+        m_last = false;
+        m_sentDate = true;
+
+        if (m_headers.contains("Sec-WebSocket-Accept"))
+        {
+            writeHeader("Sec-WebSocket-Accept", m_headers["Sec-WebSocket-Accept"]);
+        }
+         m_headers.remove("Sec-WebSocket-Accept");
+    }
+
+
     foreach(const QString & name, m_headers.keys()) {
         QString value = m_headers[name];
         if (name.compare("connection", Qt::CaseInsensitive) == 0) {

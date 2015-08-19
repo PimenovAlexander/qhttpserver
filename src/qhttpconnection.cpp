@@ -73,6 +73,7 @@ QHttpConnection::~QHttpConnection()
 
 void QHttpConnection::socketDisconnected()
 {
+    qDebug() << "HttpConnection::socketDisconnected(): called";
     if (m_request) {
         if (m_request->successful())
             return;
@@ -139,8 +140,37 @@ void QHttpConnection::parseRequest()
 {
     Q_ASSERT(m_parser);
 
-    while (m_socket->bytesAvailable()) {
+    while (m_socket->bytesAvailable()) {        
         QByteArray arr = m_socket->readAll();
+
+        /* Websocket input data */
+        if (m_parser->upgrade) {
+            qDebug() << "Some data to upgraded socket" << arr;
+            qDebug() << "Hex" << arr.toHex();
+
+            int pos = 0;
+
+            while (pos < arr.length()) {
+                if (arr[pos] == 0x00) {
+                    int len = 0;
+                    while (arr[pos + len] != 0xFF) len++;
+                    QString utf8(arr[pos], len);
+
+                    qDebug() << "UTF Data block:" << utf8;
+
+
+                } else if (arr[pos] & 0x80) {
+                    int count = 0;
+                    while (pos < arr.length() && arr[pos] & 0x80) {
+                        count = count * 128 + arr[pos] & 0x7f;
+                        pos++;
+                    }
+                    qDebug() << "Data block of length" << count;
+                    pos += count;
+                }
+            }
+        }
+
         http_parser_execute(m_parser, m_parserSettings, arr.constData(), arr.size());
     }
 }

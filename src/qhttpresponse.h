@@ -131,6 +131,11 @@ public Q_SLOTS:
         @param data Optional data to be written before finishing. */
     void end(const QByteArray &data = "");
 
+    bool isClosed()
+    {
+        return m_finished;
+    }
+
 Q_SIGNALS:
     /// Emitted when all the data has been sent
     /** This signal indicates that the underlaying socket has transmitted all
